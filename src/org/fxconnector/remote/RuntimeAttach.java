@@ -134,22 +134,19 @@ public class RuntimeAttach {
 
                 @Override public StageID[] getStageIDs() throws RemoteException {
                     finded.clear();
-                    @SuppressWarnings("deprecation")
-                    final Iterator<Window> it = Window.impl_getWindows();
-                    while (it.hasNext()) {
-                        final Window window = it.next();
-                        if (ConnectorUtils.acceptWindow(window)) {
-                            debug("Local JavaFX Stage found:" + ((Stage) window).getTitle());
-                            final StageControllerImpl scontroller = new StageControllerImpl((Stage) window, acontroller);
-                            scontroller.setRemote(true);
-                            finded.add(scontroller);
-                            if (!applicationWindows.contains(window)) {
-                                final Consumer<CSSFXEvent<?>> cssfxEventListener = scontroller.getCSSFXEventListener();
-                                cssMonitor.addEventListener(cssfxEventListener);
-                                applicationWindows.add(window);
-                            }
-                        }
-                    }
+                    Window.getWindows().stream()
+                            .filter(ConnectorUtils::acceptWindow)
+                            .forEach(window -> {
+                                debug("Local JavaFX Stage found:" + ((Stage) window).getTitle());
+                                final StageControllerImpl scontroller = new StageControllerImpl((Stage) window, acontroller);
+                                scontroller.setRemote(true);
+                                finded.add(scontroller);
+                                if (!applicationWindows.contains(window)) {
+                                    final Consumer<CSSFXEvent<?>> cssfxEventListener = scontroller.getCSSFXEventListener();
+                                    cssMonitor.addEventListener(cssfxEventListener);
+                                    applicationWindows.add(window);
+                                }
+                    });
 
                     final StageID[] ids = new StageID[finded.size()];
                     for (int i = 0; i < ids.length; i++) {
