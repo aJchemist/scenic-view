@@ -1,0 +1,48 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+mainClassName = "org.scenicview.ScenicView"
+group = 'org.scenic-view'
+version = '8.7.0'
+
+defaultTasks 'install'
+
+repositories {
+    mavenLocal()
+}
+
+configurations {
+    jdk
+    binTray
+}
+
+dependencies {
+    jdk files("${System.properties['java.home']}/../lib/tools.jar")
+    try {
+        jdk files(svJFXRTJar)
+    } catch (MissingPropertyException pne) {
+        jdk files("${System.properties['java.home']}/lib/ext/jfxrt.jar")
+    }
+}
+
+
+sourceSets {
+    main {
+        compileClasspath += configurations.jdk
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'org.scenicview.ScenicView',            /* Used for standalone Scenic View */
+            'Agent-Class': 'org.fxconnector.remote.RuntimeAttach',/* But the standalone Scenic View starts up this agent when in runtime attach mode */
+            'Premain-Class': 'org.scenicview.ScenicView'          /* Alternatively, this will be called if Scenic View is started as an agent */
+        )
+    }
+}
+
+artifacts {
+    archives(jar)
+}
